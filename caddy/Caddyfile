@@ -1,6 +1,7 @@
 # ==============================================================
-# Caddyfile: 将 dock.example.com 替换为你的 VPS 解析域名
-# 确保 VPS 开放 80 与 443 端口，Caddy 会自动申请并维护 HTTPS 证书
+# Caddyfile: Replace dock.example.com with your actual domain.
+# Ensure ports 80 and 443 are open on your VPS.
+# Caddy will automatically issue and renew Let's Encrypt certificates.
 # ==============================================================
 
 dock.example.com {

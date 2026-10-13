@@ -8,8 +8,8 @@ services:
     environment:
       - PORT=3000
       - DATA_DIR=/data
-      # - STATEDOCK_AGENT_TOKEN=your_secure_agent_token  # 可选：连接 Coding Agent 的访问凭证
-      # - PUBLIC_BASE_URL=https://dock.example.com       # 可选：外部可访问的主机域名
+      # - STATEDOCK_AGENT_TOKEN=your_secure_agent_token  # Optional: Bearer token for Coding Agents
+      # - PUBLIC_BASE_URL=https://dock.example.com       # Optional: Public domain for remote MCP/OAuth
     volumes:
       - ./data:/data
     expose:

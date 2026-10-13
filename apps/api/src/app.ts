@@ -109,7 +109,7 @@ export function createApp(service: StateDockService, options?: AppOptions) {
     "/api/plans/:reference/attachments",
     bodyLimit({
       maxSize: 5 * 1024 * 1024,
-      onError: (c) => c.json({ message: "图片不能超过 5 MB。" }, 413),
+      onError: (c) => c.json({ message: "Attachment must not exceed 5 MB." }, 413),
     }),
   );
   app.get("/api/plans/:reference/attachments", async (c) =>

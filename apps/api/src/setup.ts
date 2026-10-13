@@ -46,10 +46,10 @@ export class SetupManager {
     if (this.initialized || !this.setupToken) return;
     const port = process.env.PORT ?? "3000";
     console.log("\n" + "=".repeat(70));
-    console.log(" [StateDock Setup Required] 首次启动安全初始化密钥：");
+    console.log(" [StateDock Setup Required] Initial Setup Security Token:");
     console.log(` Setup Token: ${this.setupToken}`);
-    console.log(` 初始化激活页面: http://localhost:${port}/setup?token=${this.setupToken}`);
-    console.log(" 完成初始化后该入口将永久关闭，防止公网抢注管理员。");
+    console.log(` Setup URL:   http://localhost:${port}/setup?token=${this.setupToken}`);
+    console.log(" Once configured, this setup endpoint will be permanently disabled.");
     console.log("=".repeat(70) + "\n");
   }
 
