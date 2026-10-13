@@ -1,0 +1,33 @@
+services:
+  statedock:
+    image: statedock/statedock:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - DATA_DIR=/data
+      # - STATEDOCK_AGENT_TOKEN=your_secure_agent_token  # 可选：连接 Coding Agent 的访问凭证
+      # - PUBLIC_BASE_URL=https://dock.example.com       # 可选：外部可访问的主机域名
+    volumes:
+      - ./data:/data
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - statedock
+
+volumes:
+  caddy_data:
+  caddy_config:

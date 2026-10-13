@@ -1,0 +1,14 @@
+node_modules
+.git
+.github
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
+data
+backups
+.DS_Store
+.env*
+dist

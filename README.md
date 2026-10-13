@@ -1,70 +1,134 @@
-<div align="center">
+# StateDock Docker
 
-# StateDock for Docker — Coming Soon
+A shared workspace for people and coding agents to track project goals, tasks, and outcomes.
 
-### Self-host the shared Todo for you and your AI agents.
-
-**🚧 Coming Soon — Under Development**
-
-A Docker-based deployment is in development. This repository is a preview of the planned release; Docker images and installation instructions are not available yet.
-
-[StateDock website](https://statedock.dev) · [Usage documentation](https://statedock.dev/docs) · [Agent setup guide](https://statedock.dev/agent.md) · [Main project](https://github.com/statedock/statedock)
-
-</div>
+> **One container. Built-in SQLite. No external database. No mandatory email service.**
+> Your tasks, projects, and agent handoffs — under your control.
 
 ---
 
-## Keep the work moving across sessions
+## 快速开始
 
-You close one coding session. You open another. Your next agent needs to know what you were building, what you decided, and where the work stopped.
+### 方式一：单容器运行（最简方式）
 
-StateDock gives independent developers and small teams a shared Todo for humans and AI agents. Goals, decisions, task states, and delivery summaries stay with the project, so the next session can pick up the same work.
+在任何已安装 Docker 的服务器或开发机上运行：
 
-Through MCP, compatible coding agents can record plans, restore project context, claim assigned Ready tasks, report blockers, and leave structured handoffs. You see the goals and outcomes; your agents get the context they need to continue.
+```sh
+docker run -d \
+  --name statedock \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v ~/statedock-data:/data \
+  statedock/statedock:latest
+```
 
-StateDock records and coordinates work. Your coding agent performs the implementation. StateDock does not run, schedule, or wake agents.
+#### 首次启动安全初始化（防公网抢注）
 
-## Why a Docker edition?
+容器首次启动时会自动生成高强度一次性 `Setup Token`，请查看日志：
 
-The planned Docker edition aims to bring this workflow to your own server, NAS, or VPS, with Docker and Compose simplifying self-hosting.
+```sh
+docker logs statedock
+```
 
-The direction is simple: keep your project memory on infrastructure you manage, while retaining the shared workflow between you and your agents.
+在终端输出中找到类似如下提示：
+```text
+======================================================================
+ [StateDock Setup Required] 首次启动安全初始化密钥：
+ Setup Token: sd_setup_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ 初始化激活页面: http://<你的IP>:3000/setup?token=sd_setup_...
+ 完成初始化后该入口将永久关闭，防止公网抢注管理员。
+======================================================================
+```
+在浏览器中打开链接完成管理员账号设置后，初始化入口将永久关闭。
 
-## Planned scope
+---
 
-The core StateDock application already provides the workflows below. Bringing them to the Docker edition is **planned / targeted**; they have not yet been ported and verified as a Docker release.
+### 方式二：Docker Compose + 自动 HTTPS（推荐公网部署）
 
-| Capability | Target for the Docker edition |
-| --- | --- |
-| Shared task lifecycle | Planned → Ready → Working / Waiting → Done |
-| MCP agent access | Project context recovery, assigned Ready queues, and delivery summaries |
-| Project and task views | A shared place to see goals, decisions, progress, and outcomes |
-| Small-team project sharing | Humans and agents collaborating around the same project |
-| Cross-agent handoffs | Preserve what changed, how it was verified, and what comes next |
-| Notification integrations | Surface completion and blockers through supported channels |
-| Docker / Compose deployment | A simpler self-hosting path for a personal server, NAS, or VPS |
+适合拥有独立域名的 VPS 用户，通过内置 Caddy 容器自动申请和轮换 Let's Encrypt 证书：
 
-These are targets, not a release guarantee. Packaging, configuration, supported environments, and feature parity will be documented once they have been implemented and verified.
+1. 克隆或下载配置：
+   ```sh
+   git clone https://github.com/statedock/statedock-docker.git
+   cd statedock-docker
+   ```
 
-## Two deployment paths
+2. 修改 `caddy/Caddyfile`，将 `dock.example.com` 替换为你的实际解析域名：
+   ```caddy
+   dock.example.com {
+       reverse_proxy statedock:3000
+   }
+   ```
 
-- **Cloudflare self-hosting:** the existing StateDock implementation has a Cloudflare deployment path. See the [main project](https://github.com/statedock/statedock) and its [self-hosting documentation](https://github.com/statedock/statedock/blob/main/docs/self-hosting.md). Repository access depends on its current publication status.
-- **Docker self-hosting:** the separate deployment path being developed here. No runnable Docker distribution has been released.
+3. 启动服务：
+   ```sh
+   docker compose up -d
+   ```
 
-You can explore StateDock today at [statedock.dev](https://statedock.dev) and read the [usage documentation](https://statedock.dev/docs).
+> 提示：如果使用 1Panel、宝塔或已有 Nginx 反向代理，可使用**方式一**启动并在现有面板中添加反向代理规则指向 `localhost:3000`。
 
-## Current status
+---
 
-This repository is an announcement and roadmap page only.
+## 连接 Coding Agent（MCP）
 
-- No Docker images are available.
-- No Compose files, deployment scripts, or installation instructions are available.
-- No stable release date has been announced.
+StateDock 提供标准 Streamable HTTP MCP 协议端点：
 
-Verified setup instructions will be added when a runnable release is ready. Until then, there is nothing to install from this repository.
+* **端点地址**：`http://<VPS-IP>:3000/mcp`（或 `https://dock.example.com/mcp`）
+* **支持客户端**：Cursor, VS Code, Codex, Claude Desktop, Antigravity 等。
 
-## Help shape the release
+### 配置示例（如 Cursor / Claude Desktop / Codex）
 
-Would you run StateDock on a NAS, a home server, or a VPS? Which agents and notification channels matter to your workflow?
+```json
+{
+  "mcpServers": {
+    "statedock": {
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_AGENT_TOKEN"
+      }
+    }
+  }
+}
+```
 
-[Open an issue](https://github.com/statedock/statedock-docker/issues) to share your intended setup, ask a question, or suggest a priority. Star or watch this repository if you want to follow its development.
+Agent 连接后可自动调用 `get_instance_info`、`resume_project`、`claim_next_task` 及 `submit_handoff` 等工具，与团队共同围绕项目推进任务。
+
+---
+
+## 数据备份与持久化
+
+所有数据持久化保存在挂载的 `/data` 目录中：
+* `/data/statedock.db`：主数据库（默认开启 SQLite WAL 模式）
+* `/data/attachments/`：截图与任务附件
+* `/data/backups/`：备份归档
+
+### 在线热备份（零停机）
+由于启用了 SQLite WAL 模式，避免直接在运行期复制 `.db` 文件。可通过 API 触发原生的原子快照：
+
+```sh
+curl -X POST http://localhost:3000/api/admin/backup
+```
+数据库将在 `/data/backups/` 下自动生成干净且一致的 `statedock-backup-YYYY-MM-DDTHH-mm-ss.db` 快照。
+
+### 跨服务器迁移
+在原服务器停机后，直接打包宿主机挂载的 `~/statedock-data` 目录，复制到新服务器对应路径并重新拉起容器即可无缝恢复。
+
+---
+
+## 本地开发与测试
+
+运行要求：Node.js 22+ 与 pnpm 9.15.4。
+
+```sh
+pnpm install
+pnpm build
+pnpm test
+pnpm dev
+```
+
+---
+
+## 开源协议
+
+StateDock Docker 基于 [AGPL-3.0-only](LICENSE) 开源发布。
+第三方依赖协议详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
