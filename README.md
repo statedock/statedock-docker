@@ -95,6 +95,17 @@ StateDock provides a standard Streamable HTTP Model Context Protocol (MCP) endpo
 
 Once connected, agents can call `get_instance_info`, `resume_project`, `claim_next_task`, and `submit_handoff` to collaborate on projects across coding sessions.
 
+### StateDock coding-tool plugins
+
+The separate [StateDock plugins repository](https://github.com/statedock/statedock-plugins) contains MIT-licensed shared Skills for saving plans, restoring task context, and recording progress. The published packages currently default to the hosted StateDock service at `https://statedock.dev/mcp`. To use them with this Docker instance, configure the agent host to connect to the endpoint above and follow the platform-specific setup; that self-hosted plugin configuration has not been verified as part of the published packages.
+
+- **Codex:** installable from the GitHub repository as a local marketplace.
+- **DeepSeek Harness:** [`@statedock/dsh-plugin`](https://www.npmjs.com/package/@statedock/dsh-plugin) is published for Harness `0.2.0-rc.2`; see the [official community showcase](https://github.com/deepseek-ai/deepseek-harness/discussions/9776).
+- **ChatGPT app:** submitted to OpenAI for review; approval is pending.
+- **Cursor:** Marketplace submission materials are being prepared; installation and approval are not yet verified.
+
+The plugins only record and restore project state. They do not run task code or schedule agents. Plugin code is MIT-licensed; this Docker edition remains AGPL-3.0-only.
+
 ---
 
 ## Data Persistence & Online Backups
