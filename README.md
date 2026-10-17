@@ -1,5 +1,61 @@
 # StateDock Docker
 
+> [!IMPORTANT]
+> **This repository is archived.** StateDock Docker has been merged into
+> **[statedock-local](https://github.com/statedock/statedock-local)**: the same program now runs on
+> your computer, on a Linux server (one-line systemd installer) and in Docker. New releases, fixes
+> and the Docker image `ghcr.io/statedock/statedock` are published there only.
+>
+> **本仓库已归档。** StateDock Docker 已并入
+> **[statedock-local](https://github.com/statedock/statedock-local)**：同一个程序可在电脑、Linux 服务器（一条命令安装为 systemd 服务）和 Docker 中运行。新版本、修复以及 Docker 镜像 `ghcr.io/statedock/statedock` 今后只在那里发布。
+
+## Migrate in 5 minutes / 迁移步骤
+
+Your data is compatible as-is: same `statedock.db`, same schema. / 数据格式完全兼容，无需转换。
+
+**Stay on Docker / 继续用 Docker**
+
+1. `docker compose down` (stops the old container and flushes the SQLite WAL / 停止旧容器，确保数据写回数据库).
+2. Back up / 备份：`cp -a ./data ./data.bak`.
+3. In `compose.yaml`, change the `statedock` service / 修改 `statedock` 服务：
+   ```yaml
+   statedock:
+     image: ghcr.io/statedock/statedock:latest   # replaces image/build
+     environment:
+       - PUBLIC_BASE_URL=https://your-domain     # your public address
+       # - STATEDOCK_AGENT_TOKEN=...             # keep it if you had one
+     volumes:
+       - ./data:/data                            # unchanged
+   ```
+   Caddy can stay as it is (still `reverse_proxy statedock:3000`). / Caddy 配置无需改动。
+4. `docker compose up -d`.
+5. The web UI now requires sign-in. Use your `STATEDOCK_AGENT_TOKEN`, or if you never set one:
+   `docker compose exec statedock node dist/index.js token --no-open`.
+   Web 界面现在需要登录：使用原来的 `STATEDOCK_AGENT_TOKEN`；若未设置过，用上面的命令获取。
+6. Agents: keep the same MCP URL and send `Authorization: Bearer <token>`.
+   Agent 的 MCP 地址不变，需要带 `Authorization: Bearer <令牌>`。
+
+**Move to a plain Linux service (no Docker) / 改为普通 Linux 服务（不用 Docker）**
+
+```sh
+docker compose down
+curl -fsSL https://raw.githubusercontent.com/statedock/statedock-local/main/scripts/install.sh \
+  | sudo bash -s -- --public-url https://your-domain
+sudo systemctl stop statedock
+sudo cp ./data/statedock.db /var/lib/statedock/statedock.db
+sudo chown statedock: /var/lib/statedock/statedock.db
+sudo systemctl start statedock
+sudo statedock token
+```
+
+Full guide / 完整说明：[statedock-local/docs/server.md](https://github.com/statedock/statedock-local/blob/main/docs/server.md)
+
+---
+
+<details>
+<summary>Previous README (for reference only) / 旧版说明（仅供参考）</summary>
+
+
 A shared workspace for people and coding agents to track project goals, tasks, and outcomes.
 
 > **One container. Built-in SQLite. No external database. No mandatory email service.**  
@@ -151,3 +207,5 @@ pnpm dev
 
 StateDock Docker is licensed under [AGPL-3.0-only](LICENSE).  
 Third-party dependency licenses are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+</details>
